@@ -35,11 +35,4 @@ def scrape_card(link):
 
 
 
-
-
-
-
-
-
-
 scrape_card("https://fidilio.com/coffeeshops/melo/%D9%85%D9%84%D9%88/")

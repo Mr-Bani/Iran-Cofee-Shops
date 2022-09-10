@@ -1,5 +1,5 @@
 import mysql.connector
-
+import pandas as pd
 class sql_connector:
     def __init__(self, host, user, password, database, port):
         self.host = host
@@ -18,8 +18,30 @@ class sql_connector:
     def close(self):
         self.cursor.close()
         self.cnx.close()
+        
+    def get_all_table(self,table_name: str) -> pd.DataFrame:
 
-    def insert(self,cafe : dict) -> "Inserts a coffee into the database":
+        self.cursor.execute(f"DESCRIBE {table_name}")
+        columns_data = {}
+        columns_ids = {}
+
+        for i, x in enumerate(self.cursor):
+            name = x[0]
+            columns_ids[i] = name
+            columns_data[name] = []
+
+        command = f"SELECT * FROM {table_name}"
+        self.cursor.execute(command)
+
+        for x in self.cursor:
+            for i, value in enumerate(x):
+                name = columns_ids[i]
+                columns_data[name] += [value]
+        df = pd.DataFrame(data=columns_data)
+
+        return df
+
+    def insert(self,cafe : dict):
         #insert cafe to main table
         command = "INSERT INTO group2.cafe (cafe_name, city, province, phone_number, cost, work_start, work_end)"
         command+= f" VALUES ('{cafe['cafe_name']}', '{cafe['city']}', '{cafe['province']}',{cafe['phone_number']},{cafe['cost']},'{cafe['work_start']}','{cafe['work_end']}');"

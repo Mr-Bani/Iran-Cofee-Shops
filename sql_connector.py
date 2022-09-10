@@ -19,7 +19,7 @@ class sql_connector:
         self.cursor.close()
         self.cnx.close()
         
-    def get_all_table(self,table_name: str) -> pd.DataFrame:
+    def get_one_table(self,table_name: str) -> pd.DataFrame:
 
         self.cursor.execute(f"DESCRIBE {table_name}")
         columns_data = {}
@@ -37,9 +37,9 @@ class sql_connector:
             for i, value in enumerate(x):
                 name = columns_ids[i]
                 columns_data[name] += [value]
-        df = pd.DataFrame(data=columns_data)
+        df_one_table = pd.DataFrame(data=columns_data)
 
-        return df
+        return df_one_table
     
     def get_all_by_filter(self, table_name:str, col_names:list, condition:str = None) -> pd.DataFrame:
         columns_data = {}
@@ -64,9 +64,60 @@ class sql_connector:
             for i, value in enumerate(x):
                 name = columns_ids[i]
                 columns_data[name] += [value]
-        df = pd.DataFrame(data=columns_data)
+        df_filter = pd.DataFrame(data=columns_data)
 
-        return df
+        return df_filter
+    
+    def get_all_tables(self) -> pd.DataFrame:
+        
+        command = """
+        SELECT *
+            FROM cafe AS c
+        INNER JOIN
+            cafe_rating AS cr
+        ON
+            c.cafe_id = cr.cafe_id
+        INNER JOIN
+            cafe_address AS ca
+        ON 
+            c.cafe_id = ca.cafe_id
+        INNER JOIN
+            cafe_features AS cf
+        ON
+            c.cafe_id = cf.cafe_id
+        """
+        self.cursor.execute(command)
+        num_fields = len(self.cursor.description)
+        field_names = [i[0] for i in self.cursor.description]
+
+        columns_data = {}
+        columns_ids = {}
+
+        for i, name in enumerate(field_names):
+            columns_ids[i] = name
+            columns_data[name] = []
+
+        for x in self.cursor:
+            count_id = 0
+            count_cost = 0
+
+            for i, value in enumerate(x):
+                name = columns_ids[i] 
+                if name == 'cafe_id':
+                    count_id += 1
+                elif name == 'cost':
+                    count_cost += 1   
+
+                if name=='cafe_id' and count_id > 1:
+                    continue
+                elif name=='cost' and count_cost > 1:
+                    continue
+                else:
+                    columns_data[name] += [value]
+        df_all_tables = pd.DataFrame(columns_data)
+        
+        return df_all_tables
+    
 
     def insert(self,cafe : dict):
         #insert cafe to main table
@@ -99,18 +150,5 @@ class sql_connector:
         command+= f"VALUES ({cafe_id}, {cafe['hookah']}, {cafe['internet']},{cafe['delivery']},{cafe['smoking']},{cafe['open_space']}, {cafe['live_music']}, {cafe['parking']},{cafe['pos']});"
         self.cursor.execute(command)
         self.cnx.commit()
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

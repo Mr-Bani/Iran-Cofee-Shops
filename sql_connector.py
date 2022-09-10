@@ -40,6 +40,33 @@ class sql_connector:
         df = pd.DataFrame(data=columns_data)
 
         return df
+    
+    def get_all_by_filter(self, table_name:str, col_names:list, condition:str = None) -> pd.DataFrame:
+        columns_data = {}
+        columns_ids = {}
+
+        for i, x in enumerate(col_names):
+            name = x
+            columns_ids[i] = name
+            columns_data[name] = []
+
+        columns = ','.join(col_names)
+        command = f"""
+            SELECT {columns}
+            FROM group2.{table_name}
+        """
+        if condition != None:
+            command += f"WHERE {condition}"
+            
+        self.cursor.execute(command)
+
+        for x in self.cursor:
+            for i, value in enumerate(x):
+                name = columns_ids[i]
+                columns_data[name] += [value]
+        df = pd.DataFrame(data=columns_data)
+
+        return df
 
     def insert(self,cafe : dict):
         #insert cafe to main table

@@ -5,7 +5,7 @@
 - Plot on map
 
 ```sql
-CREATE TABLE locataion(
+CREATE TABLE cafe_locataion(
   cafe_id INT UNSIGNED,
   lat FLOAT,
   lang FLOAT,

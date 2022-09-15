@@ -33,8 +33,6 @@ st.pyplot(fig);
 
 
 
-
-
 st.title("Map of Coffee Shops")
 @st.experimental_singleton
 def load_data():

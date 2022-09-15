@@ -6,8 +6,8 @@ from lxml import etree
 
 
 #find option tags for cities
-def cities():
-    url = 'https://fidilio.com/coffeeshops/'
+def cities(type):
+    url = f'https://fidilio.com/{type}/'
     reqs = requests.get(url)
     soup = BeautifulSoup(reqs.text, 'html.parser')
     urls = []
@@ -20,12 +20,12 @@ def cities():
     return cities
 
 
-def cities_page_number():
-    cities_=cities()
+def cities_page_number(type):
+    cities_=cities(type)
     res=dict()
     for city in cities_:
         headers = {'User-Agent': 'Mozilla/5.0'}
-        response = requests.get("https://fidilio.com/coffeeshops/in/"+city, headers = headers)
+        response = requests.get(f"https://fidilio.com/{type}/in/"+city, headers = headers)
         soup = BeautifulSoup(response.text,'html.parser')
         dom = etree.HTML(str(soup))
         pages = dom.xpath('/html/body/div[2]/div/section[1]/section/div[2]/div/div/div[1]/div[2]/div/a')[-1]

@@ -6,8 +6,9 @@ import datetime
 all_features=[("دستگاه کارت خوان","pos"),("ارسال رایگان (Delivery)","delivery"),("اینترنت رایگان","internet"),("موسیقی زنده","live_music"),("سیگار","smoking"),("فضای باز","open_space"),("پارکینگ","parking"),("قلیان","hookah")]
 
 
-def scrape_card(link,city):
+def scrape_card(link,city,type):
     data=dict()
+    data['type'] = type
 
     html = get(link).text
     soup = BeautifulSoup(html, "html.parser")
@@ -66,6 +67,15 @@ def scrape_card(link,city):
     features = [feature.text.strip() for feature in features]
     for persian_feature,feature in all_features:
         data[feature] = persian_feature in features
+
+
+    #lat and long
+    loc = soup.find("a", {"class": "navigation-link"})
+    point = loc['href'].split('=')[-1]
+    lat_lon = [float(x) for x in point.split(',')]
+
+    data["lat"] = lat_lon[0]
+    data["lon"] = lat_lon[1]
 
     return data
 

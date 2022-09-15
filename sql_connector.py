@@ -20,26 +20,9 @@ class sql_connector:
         self.cnx.close()
         
     def get_one_table(self,table_name: str) -> pd.DataFrame:
+        return pd.read_sql(f"SELECT * FROM group2.{table_name};",self.cnx)
 
-        self.cursor.execute(f"DESCRIBE {table_name}")
-        columns_data = {}
-        columns_ids = {}
 
-        for i, x in enumerate(self.cursor):
-            name = x[0]
-            columns_ids[i] = name
-            columns_data[name] = []
-
-        command = f"SELECT * FROM {table_name}"
-        self.cursor.execute(command)
-
-        for x in self.cursor:
-            for i, value in enumerate(x):
-                name = columns_ids[i]
-                columns_data[name] += [value]
-        df_one_table = pd.DataFrame(data=columns_data)
-
-        return df_one_table
     
     def get_all_by_filter(self, table_name:str, col_names:list, condition:str = None) -> pd.DataFrame:
         columns_data = {}
@@ -85,6 +68,10 @@ class sql_connector:
             cafe_features AS cf
         ON
             c.cafe_id = cf.cafe_id
+        INNER JOIN
+            cafe_location AS cl
+        ON
+            c.cafe_id = cl.cafe_id            
         """
         self.cursor.execute(command)
         num_fields = len(self.cursor.description)
@@ -115,14 +102,18 @@ class sql_connector:
                 else:
                     columns_data[name] += [value]
         df_all_tables = pd.DataFrame(columns_data)
-        
+
+        df_all_tables["work_start"] = df_all_tables["work_start"].values.astype("datetime64")
+        df_all_tables["work_end"] = df_all_tables["work_end"].values.astype("datetime64")
+        df_all_tables["work_start"] = df_all_tables["work_start"].transform(lambda x: x.strftime("%H:%M"))
+        df_all_tables["work_end"] = df_all_tables["work_end"].transform(lambda x: x.strftime("%H:%M"))
         return df_all_tables
     
 
     def insert(self,cafe : dict):
         #insert cafe to main table
-        command = "INSERT INTO group2.cafe (cafe_name, city, province, phone_number, cost, work_start, work_end)"
-        command+= f" VALUES ('{cafe['cafe_name']}', '{cafe['city']}', '{cafe['province']}',{cafe['phone_number']},{cafe['cost']},'{cafe['work_start']}','{cafe['work_end']}');"
+        command = "INSERT INTO group2.cafe (cafe_name, city, province, phone_number, cost, work_start, work_end,type)"
+        command+= f" VALUES ('{cafe['cafe_name']}', '{cafe['city']}', '{cafe['province']}',{cafe['phone_number']},{cafe['cost']},'{cafe['work_start']}','{cafe['work_end']}'),{cafe['type']};"
 
         self.cursor.execute(command)
         self.cnx.commit()
@@ -148,6 +139,12 @@ class sql_connector:
         #insert cafe_features
         command = "INSERT INTO group2.cafe_features (cafe_id, hookah,internet, delivery, smoking, open_space, live_music, parking, pos)"
         command+= f"VALUES ({cafe_id}, {cafe['hookah']}, {cafe['internet']},{cafe['delivery']},{cafe['smoking']},{cafe['open_space']}, {cafe['live_music']}, {cafe['parking']},{cafe['pos']});"
+        self.cursor.execute(command)
+        self.cnx.commit()
+
+        #insert lat and long
+        command = "INSERT INTO group2.cafe_location (cafe_id, latitude, longitude)"
+        command+= f"VALUES ({cafe_id}, {cafe['lat']}, {cafe['lon']});"
         self.cursor.execute(command)
         self.cnx.commit()
 

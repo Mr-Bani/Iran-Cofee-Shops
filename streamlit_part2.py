@@ -23,6 +23,8 @@ sql = sql_connector(host,user,password,db,port)
 
 data = sql.get_all_tables()
 
+col1,col2,col3 = st.columns(3)
+
 df_f = sql.get_one_table('cafe_features')
 df_f.drop('cafe_id',axis=1,inplace=True)
 
@@ -47,11 +49,11 @@ max_feature = data.copy()
 max_feature['sum_features'] = np.sum(df_f.loc[:,],axis=1)
 max_feature['rating'] = np.mean(max_feature.loc[:,'food_quality':'environment'],axis=1)
 
-
+st.subheader("BoxPlot for Rating Among Different Cities")
 fig_box = px.box(data_frame=max_feature,x='rating',color='city',
-            title="BoxPlot for Rating Among Different Cities",
             labels={'rating':"Rating"})
 st.plotly_chart(fig_box)
+
 
 fig_hist = px.histogram(data_frame=max_feature,x='rating',color='cost',barmode='group',
                    title="Histogram of Rating Along with Cost Level",
